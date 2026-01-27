@@ -98,6 +98,14 @@ export const refillEnergy = (): GameState => {
   return state;
 };
 
+export const addEnergy = (amount: number): GameState => {
+  const state = loadGameState();
+  state.energy = Math.min(MAX_ENERGY, state.energy + amount);
+  state.lastEnergyRefill = Date.now();
+  saveGameState(state);
+  return state;
+};
+
 export const spendCoins = (amount: number): boolean => {
   const state = loadGameState();
   if (state.totalCoins >= amount) {
