@@ -8,8 +8,8 @@ interface StoreProps {
   onPurchase: (packageType: 'small' | 'large') => void;
 }
 
-const MERCHANT_UPI_ID = "99XXXXXXXX@ybl";
-const MERCHANT_NAME = "Tenali Rama Games";
+const MERCHANT_UPI_ID = "8328372587@fam";
+const MERCHANT_NAME = "Tenali Rama: Wisdom & Wit";
 
 export const Store = ({ isOpen, onClose, onPurchase }: StoreProps) => {
   if (!isOpen) return null;
