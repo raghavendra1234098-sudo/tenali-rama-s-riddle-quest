@@ -39,8 +39,9 @@ class AdService {
 
     if (this.isNative()) {
       try {
-        // Dynamic import - only works when @capacitor-community/admob is installed
-        this.admobModule = await import('@capacitor-community/admob' as any);
+        // Dynamic import with string variable to prevent Rollup from bundling
+        const admobPath = '@capacitor-community/admob';
+        this.admobModule = await import(/* @vite-ignore */ admobPath);
         const { AdMob } = this.admobModule;
         
         await AdMob.initialize({
