@@ -2,15 +2,15 @@
 // Replace AD_UNIT_IDS with your real AdMob IDs from https://admob.google.com
 
 export const AD_UNIT_IDS = {
-  // ⚠️ REPLACE THESE with your real AdMob unit IDs before building APK
-  // Format: ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX
-  REWARD_HINT: 'ca-app-pub-3940256099942544/5224354917', // Test ID - replace with yours
-  REWARD_ENERGY: 'ca-app-pub-3940256099942544/5224354917', // Test ID - replace with yours
-  REWARD_LEVEL_SKIP: 'ca-app-pub-3940256099942544/5224354917', // Test ID - replace with yours
+  // Production AdMob Unit IDs
+  REWARD_HINT: 'ca-app-pub-5228157365366428/7995990493',
+  REWARD_ENERGY: 'ca-app-pub-5228157365366428/7995990493',
+  REWARD_LEVEL_SKIP: 'ca-app-pub-5228157365366428/7995990493',
+  BANNER: 'ca-app-pub-5228157365366428/2116977854',
+  INTERSTITIAL: 'ca-app-pub-5228157365366428/3976854435',
   
-  // Your AdMob App ID (required in AndroidManifest.xml)
-  // Format: ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX
-  APP_ID: 'ca-app-pub-3940256099942544~3347511713', // Test App ID - replace with yours
+  // Your AdMob App ID (add this to AndroidManifest.xml)
+  APP_ID: 'ca-app-pub-5228157365366428~3488535748',
 };
 
 export type AdType = 'hint' | 'energy' | 'levelSkip';
