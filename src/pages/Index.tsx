@@ -5,15 +5,22 @@ import { HomeScreen } from '@/components/game/HomeScreen';
 import { LevelMap } from '@/components/game/LevelMap';
 import { GameScreen } from '@/components/game/GameScreen';
 import { Store } from '@/components/game/Store';
+import { SplashScreen } from '@/components/game/SplashScreen';
 import { loadGameState, useEnergy, addCoins, type GameState } from '@/lib/gameState';
 import { soundService } from '@/lib/soundService';
+import { adService } from '@/lib/adService';
 
-type Screen = 'home' | 'levels' | 'game' | 'store';
+type Screen = 'splash' | 'home' | 'levels' | 'game' | 'store';
 
 const Index = () => {
-  const [screen, setScreen] = useState<Screen>('home');
+  const [screen, setScreen] = useState<Screen>('splash');
   const [gameState, setGameState] = useState<GameState>(loadGameState);
   const [showStore, setShowStore] = useState(false);
+
+  // Initialize AdMob on app start
+  useEffect(() => {
+    adService.initialize();
+  }, []);
 
   const refreshGameState = useCallback(() => {
     setGameState(loadGameState());
@@ -58,13 +65,27 @@ const Index = () => {
     console.log(`Purchase attempted: ${packageType}`);
   };
 
+  const handleSplashComplete = useCallback(() => {
+    setScreen('home');
+    soundService.playBackgroundMusic();
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Header - Always visible */}
-      <Header 
-        coins={gameState.totalCoins} 
-        energy={gameState.energy} 
-      />
+      {/* Splash Screen */}
+      <AnimatePresence>
+        {screen === 'splash' && (
+          <SplashScreen onComplete={handleSplashComplete} />
+        )}
+      </AnimatePresence>
+
+      {/* Header - Visible after splash */}
+      {screen !== 'splash' && (
+        <Header 
+          coins={gameState.totalCoins} 
+          energy={gameState.energy} 
+        />
+      )}
 
       {/* Main Content */}
       <AnimatePresence mode="wait">

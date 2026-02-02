@@ -1,14 +1,14 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.f22cc08384cc43f2b37a9308347d4698',
+  appId: 'com.tenalirama.wisdomwit',
   appName: 'Tenali Rama: Wisdom & Wit',
   webDir: 'dist',
-  server: {
-    // Hot-reload from Lovable preview during development
-    url: 'https://f22cc083-84cc-43f2-b37a-9308347d4698.lovableproject.com?forceHideBadge=true',
-    cleartext: true
-  },
+  // PRODUCTION: Remove or comment out server block before building APK
+  // server: {
+  //   url: 'https://f22cc083-84cc-43f2-b37a-9308347d4698.lovableproject.com?forceHideBadge=true',
+  //   cleartext: true
+  // },
   android: {
     buildOptions: {
       keystorePath: undefined,
@@ -16,10 +16,21 @@ const config: CapacitorConfig = {
       keystorePassword: undefined,
       keystoreAliasPassword: undefined,
       releaseType: 'APK'
-    }
+    },
+    // Splash screen and icon settings
+    backgroundColor: '#1a0a0a',
   },
   plugins: {
-    // AdMob configuration will be handled in AndroidManifest.xml
+    SplashScreen: {
+      launchShowDuration: 2500,
+      launchAutoHide: true,
+      backgroundColor: '#1a0a0a',
+      androidSplashResourceName: 'splash',
+      androidScaleType: 'CENTER_CROP',
+      showSpinner: false,
+      splashFullScreen: true,
+      splashImmersive: true,
+    },
   }
 };
 
