@@ -14,6 +14,7 @@ export interface GameState {
 const STORAGE_KEY = 'tenali_rama_game_state';
 const MAX_ENERGY = 5;
 const ENERGY_REFILL_TIME = 30 * 60 * 1000; // 30 minutes
+const TOTAL_LEVELS = 1000; // Extended to 1000 levels
 
 export const getDefaultState = (): GameState => ({
   currentLevel: 1,
@@ -71,7 +72,7 @@ export const completeLevel = (level: number, coinsEarned: number): GameState => 
   
   // Unlock next level
   const nextLevel = level + 1;
-  if (nextLevel <= 400 && !state.unlockedLevels.includes(nextLevel)) {
+  if (nextLevel <= TOTAL_LEVELS && !state.unlockedLevels.includes(nextLevel)) {
     state.unlockedLevels.push(nextLevel);
   }
   
