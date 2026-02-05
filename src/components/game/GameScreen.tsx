@@ -8,6 +8,7 @@ import { ArrowLeft, Zap, AlertCircle, Play, SkipForward, CheckCircle } from 'luc
 import { soundService } from '@/lib/soundService';
 import { useHint, useEnergy, completeLevel, addEnergy, addCoins, loadGameState } from '@/lib/gameState';
 import { adService, type AdType } from '@/lib/adService';
+import { getRiddle } from '@/lib/riddlesDatabase';
 
 interface GameScreenProps {
   level: number;
@@ -15,28 +16,6 @@ interface GameScreenProps {
   onBack: () => void;
   onGameStateChange: () => void;
 }
-
-// Sample riddles - in production, these would come from AI
-const SAMPLE_RIDDLES = [
-  {
-    telugu: "రోజూ పుట్టి, రోజూ చనిపోతుంది. అది ఏమిటి?",
-    english: "It is born every day and dies every day. What is it?",
-    answer: ["sun", "సూర్యుడు", "daylight", "day"],
-    hint: "Look to the sky in the morning",
-  },
-  {
-    telugu: "నోరు లేకుండా మాట్లాడుతుంది, చెవులు లేకుండా వింటుంది. అది ఏమిటి?",
-    english: "It speaks without a mouth, hears without ears. What is it?",
-    answer: ["echo", "ప్రతిధ్వని", "pratidhwani"],
-    hint: "Try shouting in a mountain valley",
-  },
-  {
-    telugu: "ఎంత తీసుకున్నా తగ్గదు. అది ఏమిటి?",
-    english: "No matter how much you take from it, it never gets smaller. What is it?",
-    answer: ["knowledge", "జ్ఞానం", "wisdom", "విద్య"],
-    hint: "The more you learn, the more there is",
-  },
-];
 
 export const GameScreen = ({ level, energy, onBack, onGameStateChange }: GameScreenProps) => {
   const [showHint, setShowHint] = useState(false);
@@ -54,8 +33,14 @@ export const GameScreen = ({ level, energy, onBack, onGameStateChange }: GameScr
   const gameState = loadGameState();
   const hasCoinsForHint = gameState.totalCoins >= 50;
 
-  // Get a riddle based on level (cycling through samples for demo)
-  const currentRiddle = SAMPLE_RIDDLES[(level - 1) % SAMPLE_RIDDLES.length];
+  // Get the unique riddle for this level from database
+  const levelRiddle = getRiddle(level);
+  const currentRiddle = {
+    telugu: levelRiddle.telugu,
+    english: levelRiddle.english,
+    answer: levelRiddle.answer,
+    hint: levelRiddle.hint,
+  };
 
   const showSuccessMessage = (message: string) => {
     setSuccess(message);
