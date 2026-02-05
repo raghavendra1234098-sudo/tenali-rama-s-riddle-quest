@@ -32,7 +32,7 @@ export const SUBSCRIPTION_PLANS = {
 // UPI Payment Configuration
 const UPI_CONFIG = {
   merchantName: 'Tenali Rama: Wisdom & Wit',
-  upiId: '8328372587@fam',
+  upiId: '8639470264@ybl',
 };
 
 // Get default subscription state
