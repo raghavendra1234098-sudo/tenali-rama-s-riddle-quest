@@ -4,7 +4,8 @@ const config: CapacitorConfig = {
   appId: 'com.tenalirama.wisdomwit',
   appName: 'Tenali Rama: Wisdom & Wit',
   webDir: 'dist',
-  // PRODUCTION: Remove or comment out server block before building APK
+  // PRODUCTION BUILD: Server block removed for APK/AAB build
+  // For development/testing with live reload, uncomment below:
   // server: {
   //   url: 'https://f22cc083-84cc-43f2-b37a-9308347d4698.lovableproject.com?forceHideBadge=true',
   //   cleartext: true
@@ -17,7 +18,6 @@ const config: CapacitorConfig = {
       keystoreAliasPassword: undefined,
       releaseType: 'APK'
     },
-    // Splash screen and icon settings
     backgroundColor: '#1a0a0a',
   },
   plugins: {

@@ -48,7 +48,7 @@ export const HomeScreen = ({
             తెనాలి రామ
           </h1>
           <h2 className="text-2xl md:text-3xl font-semibold text-gold-light mb-4 font-royal">
-            Royal Riddler 400
+            Royal Riddler 1000
           </h2>
           <p className="text-muted-foreground max-w-md mx-auto font-telugu">
             మీ బుద్ధిని పరీక్షించండి • Test Your Wit
@@ -74,7 +74,7 @@ export const HomeScreen = ({
             </div>
             <div className="w-px bg-gold/30" />
             <div>
-              <p className="text-3xl font-bold text-gold">400</p>
+              <p className="text-3xl font-bold text-gold">1000</p>
               <p className="text-sm text-muted-foreground">Total Levels</p>
             </div>
           </div>
@@ -126,14 +126,14 @@ export const HomeScreen = ({
           className="mt-8 text-center"
         >
           <p className="text-sm text-muted-foreground">
-            Reach Level 400 to win
+            Conquer all 1000 levels to claim
           </p>
           <motion.p
             animate={{ scale: [1, 1.05, 1] }}
             transition={{ duration: 1.5, repeat: Infinity }}
             className="text-2xl font-bold text-gold text-shadow-gold"
           >
-            ₹70,000 Virtual Jackpot!
+            ₹1,00,000 Virtual Jackpot!
           </motion.p>
         </motion.div>
       </div>

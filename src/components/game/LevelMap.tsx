@@ -42,7 +42,7 @@ export const LevelMap = ({ currentLevel, unlockedLevels, completedLevels, onLeve
           <MapPin className="w-6 h-6" />
         </h2>
         <p className="text-muted-foreground mb-4">
-          Conquer all 400 levels to claim the Royal Jackpot!
+          Conquer all 1000 levels to claim the Royal Jackpot!
         </p>
         
         {/* Progress Bar */}
@@ -106,7 +106,7 @@ export const LevelMap = ({ currentLevel, unlockedLevels, completedLevels, onLeve
         <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full border-ornate">
           <Trophy className="w-6 h-6 text-gold animate-float" />
           <span className="text-gold font-bold">
-            Level 400 Jackpot: ₹70,000 Virtual Coins!
+            Level 1000 Jackpot: ₹1,00,000 Virtual Coins!
           </span>
           <Trophy className="w-6 h-6 text-gold animate-float" />
         </div>
