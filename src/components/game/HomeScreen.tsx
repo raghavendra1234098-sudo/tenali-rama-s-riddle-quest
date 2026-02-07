@@ -1,22 +1,26 @@
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Play, ShoppingCart, Trophy, Sparkles } from 'lucide-react';
+import { Play, ShoppingCart, Trophy, Sparkles, Timer, Crown } from 'lucide-react';
 import heroBg from '@/assets/hero-bg.jpg';
 
 interface HomeScreenProps {
   onStartGame: () => void;
   onOpenStore: () => void;
   onOpenLevels: () => void;
+  onOpenTimerChallenge?: () => void;
   currentLevel: number;
   completedLevels: number;
+  isPro?: boolean;
 }
 
 export const HomeScreen = ({
   onStartGame,
   onOpenStore,
   onOpenLevels,
+  onOpenTimerChallenge,
   currentLevel,
   completedLevels,
+  isPro = false,
 }: HomeScreenProps) => {
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -96,6 +100,33 @@ export const HomeScreen = ({
             <Play className="w-6 h-6 mr-2" />
             Play Now
           </Button>
+
+          {/* Timer Challenge - Pro Feature */}
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            className="relative"
+          >
+            <Button
+              variant={isPro ? "royal" : "royalOutline"}
+              size="lg"
+              onClick={onOpenTimerChallenge}
+              className="w-full"
+            >
+              <Timer className="w-5 h-5 mr-2" />
+              Timer Challenge
+              {isPro && (
+                <span className="ml-2 px-2 py-0.5 rounded-full bg-gold/20 text-gold text-xs">
+                  2x
+                </span>
+              )}
+            </Button>
+            {!isPro && (
+              <div className="absolute -top-2 -right-2 px-2 py-0.5 rounded-full bg-gradient-to-r from-gold to-amber-glow text-primary-foreground text-xs font-bold flex items-center gap-1">
+                <Crown className="w-3 h-3" />
+                PRO
+              </div>
+            )}
+          </motion.div>
 
           <Button
             variant="royal"

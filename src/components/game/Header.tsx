@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Coins, Zap, Volume2, VolumeX, Music, Music2 } from 'lucide-react';
+import { Coins, Zap, Volume2, VolumeX, Music, Music2, Crown } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { soundService } from '@/lib/soundService';
 
@@ -7,9 +7,10 @@ interface HeaderProps {
   coins: number;
   energy: number;
   maxEnergy?: number;
+  isPro?: boolean;
 }
 
-export const Header = ({ coins, energy, maxEnergy = 5 }: HeaderProps) => {
+export const Header = ({ coins, energy, maxEnergy = 5, isPro = false }: HeaderProps) => {
   const [isMuted, setIsMuted] = useState(soundService.isMuted());
   const [isMusicMuted, setIsMusicMuted] = useState(soundService.isMusicMuted());
 
@@ -49,6 +50,17 @@ export const Header = ({ coins, energy, maxEnergy = 5 }: HeaderProps) => {
           <span className="text-xl md:text-2xl font-bold text-gold text-shadow-gold tracking-wider">
             తెనాలి రామ
           </span>
+          {/* Pro Badge */}
+          {isPro && (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-gold to-amber-glow"
+            >
+              <Crown className="w-3 h-3 text-primary-foreground" />
+              <span className="text-xs font-bold text-primary-foreground">PRO</span>
+            </motion.div>
+          )}
         </motion.div>
 
         {/* Stats */}

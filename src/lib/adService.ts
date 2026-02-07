@@ -1,5 +1,8 @@
 // AdMob Service - Uses real AdMob SDK on native, simulates on web
 // Replace AD_UNIT_IDS with your real AdMob IDs from https://admob.google.com
+// Integrates with purchase service to skip ads for premium users
+
+import { hasRemovedAds } from './purchaseService';
 
 export const AD_UNIT_IDS = {
   // Production AdMob Unit IDs
@@ -74,7 +77,13 @@ class AdService {
     }
   }
 
+  // Check if ads should be shown (respects Remove Ads purchase)
+  shouldShowAds(): boolean {
+    return !hasRemovedAds();
+  }
+
   // Show a reward ad (real on native, simulated on web)
+  // Note: Reward ads are ALWAYS shown even for premium users (they opt-in for rewards)
   async showRewardAd(adType: AdType, callbacks: AdCallbacks): Promise<boolean> {
     if (this.isLoading) return false;
     this.isLoading = true;
@@ -91,6 +100,73 @@ class AdService {
       return false;
     } finally {
       this.isLoading = false;
+    }
+  }
+
+  // Show interstitial ad (respects Remove Ads purchase)
+  async showInterstitialAd(): Promise<boolean> {
+    // Skip if user has purchased Remove Ads
+    if (hasRemovedAds()) {
+      console.log('Interstitial skipped - user has Remove Ads');
+      return true;
+    }
+
+    if (this.isLoading) return false;
+    this.isLoading = true;
+
+    try {
+      if (this.isNative() && this.admobModule) {
+        const { AdMob } = this.admobModule;
+        await AdMob.prepareInterstitial({ adId: AD_UNIT_IDS.INTERSTITIAL });
+        await AdMob.showInterstitial();
+        return true;
+      } else {
+        // Simulate interstitial on web
+        console.log('Simulated interstitial ad');
+        return true;
+      }
+    } catch (error) {
+      console.error('Interstitial error:', error);
+      return false;
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  // Show banner ad (respects Remove Ads purchase)
+  async showBannerAd(): Promise<boolean> {
+    // Skip if user has purchased Remove Ads
+    if (hasRemovedAds()) {
+      console.log('Banner skipped - user has Remove Ads');
+      return true;
+    }
+
+    try {
+      if (this.isNative() && this.admobModule) {
+        const { AdMob, BannerAdSize, BannerAdPosition } = this.admobModule;
+        await AdMob.showBanner({
+          adId: AD_UNIT_IDS.BANNER,
+          adSize: BannerAdSize.ADAPTIVE_BANNER,
+          position: BannerAdPosition.BOTTOM_CENTER,
+        });
+        return true;
+      }
+      return true;
+    } catch (error) {
+      console.error('Banner error:', error);
+      return false;
+    }
+  }
+
+  // Hide banner ad
+  async hideBannerAd(): Promise<void> {
+    try {
+      if (this.isNative() && this.admobModule) {
+        const { AdMob } = this.admobModule;
+        await AdMob.hideBanner();
+      }
+    } catch (error) {
+      console.error('Hide banner error:', error);
     }
   }
 
