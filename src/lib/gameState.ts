@@ -9,6 +9,7 @@ export interface GameState {
   lastEnergyRefill: number;
   unlockedLevels: number[];
   completedLevels: number[];
+  freeHints: number;
 }
 
 const STORAGE_KEY = 'tenali_rama_game_state';
@@ -25,7 +26,9 @@ export const getDefaultState = (): GameState => ({
   lastEnergyRefill: Date.now(),
   unlockedLevels: [1],
   completedLevels: [],
+  freeHints: 0,
 });
+
 
 export const loadGameState = (): GameState => {
   try {
