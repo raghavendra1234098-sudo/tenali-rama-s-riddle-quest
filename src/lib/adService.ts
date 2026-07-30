@@ -9,6 +9,7 @@ export const AD_UNIT_IDS = {
   REWARD_HINT: 'ca-app-pub-5228157365366428/7995990493',
   REWARD_ENERGY: 'ca-app-pub-5228157365366428/7995990493',
   REWARD_LEVEL_SKIP: 'ca-app-pub-5228157365366428/7995990493',
+  REWARD_COINS: 'ca-app-pub-5228157365366428/7995990493',
   BANNER: 'ca-app-pub-5228157365366428/2116977854',
   INTERSTITIAL: 'ca-app-pub-5228157365366428/3976854435',
   
@@ -16,7 +17,7 @@ export const AD_UNIT_IDS = {
   APP_ID: 'ca-app-pub-5228157365366428~3488535748',
 };
 
-export type AdType = 'hint' | 'energy' | 'levelSkip';
+export type AdType = 'hint' | 'energy' | 'levelSkip' | 'coins';
 
 interface AdCallbacks {
   onAdLoaded?: () => void;
@@ -72,6 +73,8 @@ class AdService {
         return AD_UNIT_IDS.REWARD_ENERGY;
       case 'levelSkip':
         return AD_UNIT_IDS.REWARD_LEVEL_SKIP;
+      case 'coins':
+        return AD_UNIT_IDS.REWARD_COINS;
       default:
         return AD_UNIT_IDS.REWARD_HINT;
     }
@@ -236,14 +239,16 @@ class AdService {
   }
 
   // Get reward amount based on ad type
-  getRewardAmount(adType: AdType): { coins?: number; energy?: number; levelSkip?: boolean } {
+  getRewardAmount(adType: AdType): { coins?: number; energy?: number; levelSkip?: boolean; hints?: number } {
     switch (adType) {
       case 'hint':
-        return { coins: 50 }; // Free hint worth 50 coins
+        return { hints: 1 }; // One free hint
       case 'energy':
-        return { energy: 3 }; // Refill 3 energy
+        return { energy: 5 }; // Full energy refill
       case 'levelSkip':
         return { levelSkip: true, coins: 25 }; // Skip level + bonus coins
+      case 'coins':
+        return { coins: 50 }; // 50 bonus coins
       default:
         return {};
     }

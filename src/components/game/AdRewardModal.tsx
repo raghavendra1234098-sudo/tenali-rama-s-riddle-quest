@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { Play, Gift, Zap, Lightbulb, SkipForward, X, Loader2 } from 'lucide-react';
+import { Play, Gift, Zap, Lightbulb, SkipForward, X, Loader2, Coins } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { adService, type AdType } from '@/lib/adService';
 
@@ -8,7 +8,7 @@ interface AdRewardModalProps {
   isOpen: boolean;
   adType: AdType;
   onClose: () => void;
-  onRewardEarned: (reward: { coins?: number; energy?: number; levelSkip?: boolean }) => void;
+  onRewardEarned: (reward: { coins?: number; energy?: number; levelSkip?: boolean; hints?: number }) => void;
 }
 
 const AD_CONFIG = {
@@ -29,6 +29,12 @@ const AD_CONFIG = {
     title: 'Skip Level',
     description: 'Watch a short video to skip this difficult level!',
     gradient: 'from-purple-500 to-pink-500',
+  },
+  coins: {
+    icon: Coins,
+    title: 'Bonus Coins',
+    description: 'Watch a short video to earn 50 bonus coins!',
+    gradient: 'from-amber-400 to-orange-500',
   },
 };
 
@@ -158,7 +164,7 @@ export const AdRewardModal = ({ isOpen, adType, onClose, onRewardEarned }: AdRew
                   {/* Reward Preview */}
                   <div className="mb-6 p-3 rounded-lg bg-gold/10 border border-gold/30">
                     <p className="text-gold text-sm font-medium">
-                      🎁 Reward: {adType === 'hint' ? 'Free Hint' : adType === 'energy' ? '+3 Energy' : 'Skip Level + 25 Coins'}
+                      🎁 Reward: {adType === 'hint' ? 'Free Hint' : adType === 'energy' ? 'Full Energy Refill' : adType === 'coins' ? '+50 Coins' : 'Skip Level + 25 Coins'}
                     </p>
                   </div>
 
