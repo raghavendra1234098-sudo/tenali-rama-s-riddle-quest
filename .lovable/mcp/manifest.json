@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "sdk_version": "0.25.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "none"
+  },
+  "mcp": {
+    "server": {
+      "name": "tenali-rama-s-riddle-quest",
+      "version": "0.1.0",
+      "title": "Tenali Rama's Riddle Quest"
+    },
+    "tools": [
+      {
+        "name": "get_riddle",
+        "title": "Get riddle by level",
+        "description": "Fetch the bilingual (Telugu + English) riddle for a given game level, including its hint and difficulty. The answer is never included.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "level": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991,
+              "description": "Game level number, starting at 1."
+            }
+          },
+          "required": [
+            "level"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "search_riddles",
+        "title": "Search riddles",
+        "description": "Search the riddle collection by keyword (matches the English or Telugu riddle text and the hint) and optionally by difficulty. Answers are never included.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Keyword or phrase to search for."
+            },
+            "difficulty": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "easy",
+                    "medium",
+                    "hard",
+                    "expert",
+                    "genius"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional difficulty filter. Use null for all difficulties."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "description": "Maximum number of riddles to return (1-50)."
+            }
+          },
+          "required": [
+            "query",
+            "difficulty",
+            "limit"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "check_answer",
+        "title": "Check a riddle answer",
+        "description": "Check whether a guess solves the riddle at a given level. Returns whether it is correct plus the riddle's hint; it never reveals the answer.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "level": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991,
+              "description": "Game level number of the riddle being answered."
+            },
+            "guess": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The proposed answer, in English or Telugu."
+            }
+          },
+          "required": [
+            "level",
+            "guess"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_riddle_stats",
+        "title": "Get riddle collection stats",
+        "description": "Return the total number of riddles, how many are premium, and the count of riddles per difficulty tier.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
