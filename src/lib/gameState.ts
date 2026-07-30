@@ -9,6 +9,7 @@ export interface GameState {
   lastEnergyRefill: number;
   unlockedLevels: number[];
   completedLevels: number[];
+  freeHints: number;
 }
 
 const STORAGE_KEY = 'tenali_rama_game_state';
@@ -25,13 +26,15 @@ export const getDefaultState = (): GameState => ({
   lastEnergyRefill: Date.now(),
   unlockedLevels: [1],
   completedLevels: [],
+  freeHints: 0,
 });
+
 
 export const loadGameState = (): GameState => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
-      const state = JSON.parse(stored) as GameState;
+      const state = { ...getDefaultState(), ...(JSON.parse(stored) as GameState) };
       // Refill energy based on time passed
       const timePassed = Date.now() - state.lastEnergyRefill;
       const energyToAdd = Math.floor(timePassed / ENERGY_REFILL_TIME);
@@ -124,11 +127,28 @@ export const addCoins = (amount: number): GameState => {
   return state;
 };
 
+export const addFreeHints = (amount: number): GameState => {
+  const state = loadGameState();
+  state.freeHints += amount;
+  saveGameState(state);
+  return state;
+};
+
 export const useHint = (): boolean => {
   const state = loadGameState();
-  if (spendCoins(50)) {
+
+  // Free hints (earned from ads or coin bundles) are used first
+  if (state.freeHints > 0) {
+    state.freeHints -= 1;
     state.hintsUsed += 1;
     saveGameState(state);
+    return true;
+  }
+
+  if (spendCoins(50)) {
+    const fresh = loadGameState();
+    fresh.hintsUsed += 1;
+    saveGameState(fresh);
     return true;
   }
   return false;

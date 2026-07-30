@@ -6,7 +6,7 @@ import { AdRewardModal } from './AdRewardModal';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Zap, AlertCircle, Play, SkipForward, CheckCircle } from 'lucide-react';
 import { soundService } from '@/lib/soundService';
-import { useHint, useEnergy, completeLevel, addEnergy, addCoins, loadGameState } from '@/lib/gameState';
+import { useHint, useEnergy, completeLevel, addEnergy, addCoins, addFreeHints, loadGameState } from '@/lib/gameState';
 import { adService, type AdType } from '@/lib/adService';
 import { getRiddle } from '@/lib/riddlesDatabase';
 
@@ -77,11 +77,15 @@ export const GameScreen = ({ level, energy, onBack, onGameStateChange }: GameScr
     setAdModalOpen(true);
   }, []);
 
-  const handleAdReward = useCallback((reward: { coins?: number; energy?: number; levelSkip?: boolean }) => {
+  const handleAdReward = useCallback((reward: { coins?: number; energy?: number; levelSkip?: boolean; hints?: number }) => {
     soundService.play('coin');
     
     if (reward.coins) {
       addCoins(reward.coins);
+    }
+
+    if (reward.hints) {
+      addFreeHints(reward.hints);
     }
     
     if (reward.energy) {

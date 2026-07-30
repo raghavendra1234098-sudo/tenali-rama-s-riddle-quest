@@ -1,9 +1,6 @@
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { LevelCard } from './LevelCard';
-import { PaywallScreen } from './PaywallScreen';
-import { Trophy, MapPin, Crown } from 'lucide-react';
-import { hasPremiumAccess, levelRequiresPremium } from '@/lib/subscriptionService';
+import { Trophy, MapPin } from 'lucide-react';
 
 interface LevelMapProps {
   currentLevel: number;
@@ -13,19 +10,12 @@ interface LevelMapProps {
 }
 
 export const LevelMap = ({ currentLevel, unlockedLevels, completedLevels, onLevelSelect }: LevelMapProps) => {
-  const [showPaywall, setShowPaywall] = useState(false);
   const totalLevels = 1000;
   const levels = Array.from({ length: totalLevels }, (_, i) => i + 1);
-  const isPremium = hasPremiumAccess();
-
   const progress = (completedLevels.length / totalLevels) * 100;
 
   const handleLevelClick = (level: number) => {
-    if (levelRequiresPremium(level) && !isPremium) {
-      setShowPaywall(true);
-    } else {
-      onLevelSelect(level);
-    }
+    onLevelSelect(level);
   };
 
   return (
@@ -62,15 +52,6 @@ export const LevelMap = ({ currentLevel, unlockedLevels, completedLevels, onLeve
         </div>
       </motion.div>
 
-      {/* Premium Section Label */}
-      {!isPremium && (
-        <div className="flex items-center justify-center gap-2 mb-4 text-sm">
-          <Crown className="w-4 h-4 text-purple-400" />
-          <span className="text-muted-foreground">Levels 401-1000 require </span>
-          <button onClick={() => setShowPaywall(true)} className="text-gold underline">Genius Content</button>
-        </div>
-      )}
-
       {/* Level Grid */}
       <div className="max-h-[50vh] overflow-y-auto px-2 pb-4 scrollbar-thin scrollbar-thumb-gold/30 scrollbar-track-transparent">
         <div className="grid grid-cols-5 md:grid-cols-10 gap-2 md:gap-3">
@@ -81,20 +62,11 @@ export const LevelMap = ({ currentLevel, unlockedLevels, completedLevels, onLeve
               isUnlocked={unlockedLevels.includes(level)}
               isCompleted={completedLevels.includes(level)}
               isCurrent={level === currentLevel}
-              isPremiumLevel={levelRequiresPremium(level)}
-              isPremiumUser={isPremium}
               onClick={() => handleLevelClick(level)}
             />
           ))}
         </div>
       </div>
-
-      {/* Paywall Modal */}
-      <PaywallScreen 
-        isOpen={showPaywall} 
-        onClose={() => setShowPaywall(false)}
-        onSubscriptionActivated={() => setShowPaywall(false)}
-      />
 
       {/* Jackpot Indicator */}
       <motion.div 
@@ -106,7 +78,7 @@ export const LevelMap = ({ currentLevel, unlockedLevels, completedLevels, onLeve
         <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full border-ornate">
           <Trophy className="w-6 h-6 text-gold animate-float" />
           <span className="text-gold font-bold">
-            Level 1000 Jackpot: ₹1,00,000 Virtual Coins!
+            Level 1000 Jackpot: 1,00,000 Virtual Coins!
           </span>
           <Trophy className="w-6 h-6 text-gold animate-float" />
         </div>
