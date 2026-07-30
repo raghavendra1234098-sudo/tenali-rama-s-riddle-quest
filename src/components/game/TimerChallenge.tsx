@@ -134,18 +134,12 @@ export const TimerChallenge = ({ isOpen, onClose, onGameStateChange }: TimerChal
           
           <h2 className="text-2xl font-bold text-gold mb-2">Timer Challenges</h2>
           <p className="text-muted-foreground mb-6">
-            This is a Pro-exclusive feature! Upgrade to Pro to access Timer Challenges and earn 2x coins.
+            🔒 Unlock at Level 250 — complete Level 250 to permanently unlock Timer Challenges and 2x coins.
           </p>
-          
-          <div className="flex gap-3">
-            <Button variant="royalOutline" onClick={onClose} className="flex-1">
-              Back
-            </Button>
-            <Button variant="treasure" onClick={onClose} className="flex-1">
-              <Star className="w-4 h-4 mr-2" />
-              Get Pro
-            </Button>
-          </div>
+
+          <Button variant="royalOutline" onClick={onClose} className="w-full">
+            Back
+          </Button>
         </motion.div>
       </motion.div>
     );
