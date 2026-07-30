@@ -1,59 +1,90 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Coins, Zap, Crown, ShieldCheck, X, Ban, Star, Timer, ArrowRight } from 'lucide-react';
-import { hasRemovedAds, hasProUpgrade } from '@/lib/purchaseService';
+import { Coins, Zap, Crown, ShieldCheck, X, Ban, Star, Timer, Lock, Check, Lightbulb } from 'lucide-react';
+import {
+  COIN_BUNDLES,
+  UNLOCK_REQUIREMENTS,
+  redeemCoinBundle,
+  hasRemovedAds,
+  hasProUpgrade,
+  getUnlockProgress,
+  type BundleId,
+} from '@/lib/purchaseService';
+import { loadGameState } from '@/lib/gameState';
+import { soundService } from '@/lib/soundService';
+import { AdRewardModal } from './AdRewardModal';
+import { addCoins, addEnergy, addFreeHints } from '@/lib/gameState';
+import type { AdType } from '@/lib/adService';
 
 interface StoreProps {
   isOpen: boolean;
   onClose: () => void;
-  onPurchase: (packageType: 'small' | 'large') => void;
-  onOpenPremiumStore?: () => void;
+  onGameStateChange?: () => void;
   onOpenTimerChallenge?: () => void;
 }
 
-const MERCHANT_UPI_ID = "8639470264@ybl";
-const MERCHANT_NAME = "Tenali Rama: Wisdom & Wit";
-
-export const Store = ({ isOpen, onClose, onPurchase, onOpenPremiumStore, onOpenTimerChallenge }: StoreProps) => {
+export const Store = ({ isOpen, onClose, onGameStateChange, onOpenTimerChallenge }: StoreProps) => {
   const [activeTab, setActiveTab] = useState<'coins' | 'premium'>('coins');
-  
+  const [message, setMessage] = useState<string | null>(null);
+  const [adModalOpen, setAdModalOpen] = useState(false);
+  const [adType, setAdType] = useState<AdType>('energy');
+
   const adsRemoved = hasRemovedAds();
   const isPro = hasProUpgrade();
+  const coins = loadGameState().totalCoins;
 
   if (!isOpen) return null;
 
-  const packages = [
-    {
-      id: 'small',
-      name: 'Gold Pouch',
-      price: 49,
-      coins: 500,
-      bonus: '+50 bonus',
-      icon: Coins,
-      popular: false,
-    },
-    {
-      id: 'large',
-      name: 'Royal Treasury',
-      price: 199,
-      coins: 2500,
-      bonus: '+500 bonus',
-      icon: Crown,
-      popular: true,
-    },
+  const bundles = [
+    { ...COIN_BUNDLES.goldPouch, icon: Coins, popular: false },
+    { ...COIN_BUNDLES.royalTreasury, icon: Crown, popular: true },
   ];
 
-  const handlePurchase = (pkg: typeof packages[0]) => {
-    // Generate UPI payment link
-    const upiLink = `upi://pay?pa=${MERCHANT_UPI_ID}&pn=${encodeURIComponent(MERCHANT_NAME)}&am=${pkg.price}&cu=INR&tn=${encodeURIComponent(`${pkg.name} - Tenali Rama`)}`;
-    
-    // Open UPI app
-    window.location.href = upiLink;
-    
-    // Track purchase attempt
-    onPurchase(pkg.id as 'small' | 'large');
+  const handleRedeem = (bundleId: BundleId) => {
+    const result = redeemCoinBundle(bundleId);
+    soundService.play(result.success ? 'coin' : 'wrong');
+    setMessage(result.message);
+    setTimeout(() => setMessage(null), 3000);
+    onGameStateChange?.();
   };
+
+  const openAd = (type: AdType) => {
+    soundService.play('click');
+    setAdType(type);
+    setAdModalOpen(true);
+  };
+
+  const handleAdReward = (reward: { coins?: number; energy?: number; hints?: number }) => {
+    if (reward.coins) addCoins(reward.coins);
+    if (reward.energy) addEnergy(reward.energy);
+    if (reward.hints) addFreeHints(reward.hints);
+    soundService.play('coin');
+    setMessage('Reward claimed!');
+    setTimeout(() => setMessage(null), 3000);
+    onGameStateChange?.();
+  };
+
+  const premiumCards = [
+    {
+      key: 'removeAds' as const,
+      title: 'Remove Ads',
+      description: adsRemoved ? 'Enjoying ad-free gameplay!' : 'Enjoy uninterrupted gameplay',
+      unlocked: adsRemoved,
+      icon: Ban,
+      level: UNLOCK_REQUIREMENTS.removeAds,
+      accent: 'crimson',
+    },
+    {
+      key: 'proUpgrade' as const,
+      title: 'Pro Upgrade',
+      description: isPro ? 'Timer Challenge & 2x coins active!' : 'Timer Challenges + 2x Coins',
+      unlocked: isPro,
+      icon: Star,
+      level: UNLOCK_REQUIREMENTS.proUpgrade,
+      accent: 'gold',
+    },
+  ];
 
   return (
     <motion.div
@@ -79,7 +110,8 @@ export const Store = ({ isOpen, onClose, onPurchase, onOpenPremiumStore, onOpenT
         <div className="text-center mb-6">
           <Crown className="w-12 h-12 text-gold mx-auto mb-2 animate-float" />
           <h2 className="text-2xl font-bold text-gold text-shadow-gold">Royal Store</h2>
-          <p className="text-muted-foreground text-sm mt-1">Purchase gold & premium upgrades</p>
+          <p className="text-muted-foreground text-sm mt-1">Spend your earned coins & unlock rewards</p>
+          <p className="text-gold text-sm mt-2 font-semibold">{coins.toLocaleString()} coins available</p>
         </div>
 
         {/* Tabs */}
@@ -108,6 +140,12 @@ export const Store = ({ isOpen, onClose, onPurchase, onOpenPremiumStore, onOpenT
           </button>
         </div>
 
+        {message && (
+          <div className="mb-4 p-3 rounded-lg bg-gold/10 border border-gold/30 text-sm text-gold text-center">
+            {message}
+          </div>
+        )}
+
         <AnimatePresence mode="wait">
           {/* Coins Tab */}
           {activeTab === 'coins' && (
@@ -117,57 +155,80 @@ export const Store = ({ isOpen, onClose, onPurchase, onOpenPremiumStore, onOpenT
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
             >
-              {/* Coin Packages */}
+              {/* Coin Bundles */}
               <div className="grid gap-4 mb-6">
-                {packages.map((pkg) => (
-                  <motion.div
-                    key={pkg.id}
-                    whileHover={{ scale: 1.02 }}
-                    className={`relative p-4 rounded-xl border-2 ${
-                      pkg.popular 
-                        ? 'border-gold bg-gold/10' 
-                        : 'border-gold/30 bg-muted/50'
-                    }`}
-                  >
-                    {pkg.popular && (
-                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-gold text-primary-foreground text-xs font-semibold">
-                        BEST VALUE
-                      </span>
-                    )}
+                {bundles.map((bundle) => {
+                  const affordable = coins >= bundle.cost;
+                  return (
+                    <motion.div
+                      key={bundle.id}
+                      whileHover={{ scale: 1.02 }}
+                      className={`relative p-4 rounded-xl border-2 ${
+                        bundle.popular ? 'border-gold bg-gold/10' : 'border-gold/30 bg-muted/50'
+                      }`}
+                    >
+                      {bundle.popular && (
+                        <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-gold text-primary-foreground text-xs font-semibold">
+                          BEST VALUE
+                        </span>
+                      )}
 
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`p-3 rounded-lg ${pkg.popular ? 'gradient-gold' : 'bg-gold/20'}`}>
-                          <pkg.icon className={`w-6 h-6 ${pkg.popular ? 'text-primary-foreground' : 'text-gold'}`} />
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className={`p-3 rounded-lg ${bundle.popular ? 'gradient-gold' : 'bg-gold/20'}`}>
+                            <bundle.icon className={`w-6 h-6 ${bundle.popular ? 'text-primary-foreground' : 'text-gold'}`} />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-foreground">{bundle.name}</h3>
+                            <p className="text-gold text-sm">{bundle.rewardText}</p>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-foreground">{pkg.name}</h3>
-                          <p className="text-gold text-sm">
-                            {pkg.coins.toLocaleString()} coins 
-                            <span className="text-amber-glow ml-1">{pkg.bonus}</span>
-                          </p>
-                        </div>
+
+                        <Button
+                          variant={bundle.popular ? 'treasure' : 'royal'}
+                          disabled={!affordable}
+                          onClick={() => handleRedeem(bundle.id)}
+                          className="shrink-0"
+                        >
+                          <Coins className="w-4 h-4 mr-1" />
+                          {bundle.cost.toLocaleString()}
+                        </Button>
                       </div>
-
-                      <Button
-                        variant={pkg.popular ? "treasure" : "royal"}
-                        onClick={() => handlePurchase(pkg)}
-                      >
-                        ₹{pkg.price}
-                      </Button>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  );
+                })}
               </div>
 
-              {/* Energy Refill Option */}
-              <div className="pt-4 border-t border-gold/20">
+              {/* Rewarded Ads */}
+              <div className="pt-4 border-t border-gold/20 space-y-3">
+                <h4 className="text-sm font-semibold text-gold">Free Rewards — Watch an Ad</h4>
+
                 <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                   <div className="flex items-center gap-2">
                     <Zap className="w-5 h-5 text-amber-glow" />
                     <span className="text-sm text-foreground">Refill Energy</span>
                   </div>
-                  <Button variant="royalOutline" size="sm">
+                  <Button variant="royalOutline" size="sm" onClick={() => openAd('energy')}>
+                    Watch Ad
+                  </Button>
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <div className="flex items-center gap-2">
+                    <Lightbulb className="w-5 h-5 text-amber-glow" />
+                    <span className="text-sm text-foreground">Get One Hint</span>
+                  </div>
+                  <Button variant="royalOutline" size="sm" onClick={() => openAd('hint')}>
+                    Watch Ad
+                  </Button>
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <div className="flex items-center gap-2">
+                    <Coins className="w-5 h-5 text-gold" />
+                    <span className="text-sm text-foreground">Earn 50 Coins</span>
+                  </div>
+                  <Button variant="royalOutline" size="sm" onClick={() => openAd('coins')}>
                     Watch Ad
                   </Button>
                 </div>
@@ -184,69 +245,49 @@ export const Store = ({ isOpen, onClose, onPurchase, onOpenPremiumStore, onOpenT
               exit={{ opacity: 0, x: -20 }}
               className="space-y-4"
             >
-              {/* Remove Ads Card */}
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                  adsRemoved 
-                    ? 'border-accent/50 bg-accent/10' 
-                    : 'border-crimson/50 bg-crimson/10 hover:border-crimson'
-                }`}
-                onClick={() => !adsRemoved && onOpenPremiumStore?.()}
-              >
-                <div className="flex items-center gap-4">
-                  <div className={`p-3 rounded-lg ${adsRemoved ? 'bg-accent/20' : 'bg-crimson/20'}`}>
-                    <Ban className={`w-6 h-6 ${adsRemoved ? 'text-accent' : 'text-crimson'}`} />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-foreground flex items-center gap-2">
-                      Remove Ads
-                      {adsRemoved && <span className="text-xs bg-accent/20 text-accent px-2 py-0.5 rounded-full">ACTIVE</span>}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {adsRemoved ? 'Enjoying ad-free experience!' : 'Enjoy uninterrupted gameplay'}
-                    </p>
-                  </div>
-                  {!adsRemoved && (
-                    <div className="flex items-center gap-1 text-crimson">
-                      <span className="font-bold">₹49</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </div>
-                  )}
-                </div>
-              </motion.div>
+              <p className="text-sm text-muted-foreground text-center">
+                Premium features are earned through gameplay — never bought.
+              </p>
 
-              {/* Pro Upgrade Card */}
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                  isPro 
-                    ? 'border-gold/50 bg-gold/10' 
-                    : 'border-gold/50 bg-gold/5 hover:border-gold'
-                }`}
-                onClick={() => !isPro && onOpenPremiumStore?.()}
-              >
-                <div className="flex items-center gap-4">
-                  <div className={`p-3 rounded-lg ${isPro ? 'gradient-gold' : 'bg-gold/20'}`}>
-                    <Star className={`w-6 h-6 ${isPro ? 'text-primary-foreground' : 'text-gold'}`} />
+              {premiumCards.map((card) => (
+                <motion.div
+                  key={card.key}
+                  whileHover={{ scale: 1.01 }}
+                  className={`p-4 rounded-xl border-2 transition-all ${
+                    card.unlocked
+                      ? 'border-accent/50 bg-accent/10'
+                      : 'border-gold/30 bg-muted/40'
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`p-3 rounded-lg ${card.unlocked ? 'bg-accent/20' : 'bg-muted'}`}>
+                      <card.icon className={`w-6 h-6 ${card.unlocked ? 'text-accent' : 'text-muted-foreground'}`} />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-foreground">{card.title}</h3>
+                      <p className="text-sm text-muted-foreground">{card.description}</p>
+                    </div>
+                    {card.unlocked ? (
+                      <span className="flex items-center gap-1 text-accent text-sm font-semibold whitespace-nowrap">
+                        <Check className="w-4 h-4" /> Unlocked
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-muted-foreground text-sm font-semibold whitespace-nowrap">
+                        <Lock className="w-4 h-4" /> Unlock at Level {card.level}
+                      </span>
+                    )}
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-foreground flex items-center gap-2">
-                      Pro Upgrade
-                      {isPro && <span className="text-xs bg-gold/20 text-gold px-2 py-0.5 rounded-full">PRO</span>}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {isPro ? 'All Pro features unlocked!' : 'Timer Challenges + 2x Coins'}
-                    </p>
-                  </div>
-                  {!isPro && (
-                    <div className="flex items-center gap-1 text-gold">
-                      <span className="font-bold">₹99</span>
-                      <ArrowRight className="w-4 h-4" />
+
+                  {!card.unlocked && (
+                    <div className="mt-3 h-2 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className="h-full gradient-gold"
+                        style={{ width: `${getUnlockProgress(card.key)}%` }}
+                      />
                     </div>
                   )}
-                </div>
-              </motion.div>
+                </motion.div>
+              ))}
 
               {/* Timer Challenge Quick Access */}
               {isPro && (
@@ -269,26 +310,23 @@ export const Store = ({ isOpen, onClose, onPurchase, onOpenPremiumStore, onOpenT
                   </div>
                 </motion.div>
               )}
-
-              {/* View All Premium Options */}
-              <Button
-                variant="royal"
-                className="w-full mt-4"
-                onClick={onOpenPremiumStore}
-              >
-                <Crown className="w-4 h-4 mr-2" />
-                View All Premium Options
-              </Button>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Security Badge */}
+        {/* Trust Badge */}
         <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mt-6">
           <ShieldCheck className="w-4 h-4 text-accent" />
-          <span>256-bit Encrypted • Secure UPI Payment</span>
+          <span>Virtual coins only • No real-money purchases</span>
         </div>
       </motion.div>
+
+      <AdRewardModal
+        isOpen={adModalOpen}
+        adType={adType}
+        onClose={() => setAdModalOpen(false)}
+        onRewardEarned={handleAdReward}
+      />
     </motion.div>
   );
 };
