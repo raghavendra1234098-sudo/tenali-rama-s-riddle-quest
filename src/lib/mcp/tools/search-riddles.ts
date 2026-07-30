@@ -1,6 +1,6 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import riddlesData, { getTotalRiddleCount, isPremiumLevel } from "@/lib/riddlesDatabase";
+import riddlesData, { getTotalRiddleCount, isPremiumLevel } from "../../riddlesDatabase";
 
 export default defineTool({
   name: "search_riddles",

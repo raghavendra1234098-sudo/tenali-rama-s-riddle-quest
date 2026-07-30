@@ -1,5 +1,5 @@
 import { defineTool } from "@lovable.dev/mcp-js";
-import riddlesData, { getTotalRiddleCount, getPremiumRiddleCount } from "@/lib/riddlesDatabase";
+import riddlesData, { getTotalRiddleCount, getPremiumRiddleCount } from "../../riddlesDatabase";
 
 export default defineTool({
   name: "get_riddle_stats",
