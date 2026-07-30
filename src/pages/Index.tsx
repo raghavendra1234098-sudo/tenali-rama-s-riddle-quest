@@ -5,7 +5,6 @@ import { HomeScreen } from '@/components/game/HomeScreen';
 import { LevelMap } from '@/components/game/LevelMap';
 import { GameScreen } from '@/components/game/GameScreen';
 import { Store } from '@/components/game/Store';
-import { PremiumStore } from '@/components/game/PremiumStore';
 import { TimerChallenge } from '@/components/game/TimerChallenge';
 import { SplashScreen } from '@/components/game/SplashScreen';
 import { loadGameState, useEnergy, addCoins, type GameState } from '@/lib/gameState';
@@ -19,7 +18,6 @@ const Index = () => {
   const [screen, setScreen] = useState<Screen>('splash');
   const [gameState, setGameState] = useState<GameState>(loadGameState);
   const [showStore, setShowStore] = useState(false);
-  const [showPremiumStore, setShowPremiumStore] = useState(false);
   const [showTimerChallenge, setShowTimerChallenge] = useState(false);
 
   // Initialize AdMob on app start
@@ -64,18 +62,6 @@ const Index = () => {
     }
   };
 
-  const handlePurchase = (packageType: 'small' | 'large') => {
-    // In production, verify payment before adding coins
-    // For now, this is just tracking the attempt
-    console.log(`Purchase attempted: ${packageType}`);
-  };
-
-  const handlePurchaseComplete = () => {
-    refreshGameState();
-    setShowPremiumStore(false);
-    setShowStore(false);
-  };
-
   const handleSplashComplete = useCallback(() => {
     setScreen('home');
     soundService.playBackgroundMusic();
@@ -84,11 +70,6 @@ const Index = () => {
   const handleOpenTimerChallenge = () => {
     setShowStore(false);
     setShowTimerChallenge(true);
-  };
-
-  const handleOpenPremiumStore = () => {
-    setShowStore(false);
-    setShowPremiumStore(true);
   };
 
   return (
@@ -125,7 +106,10 @@ const Index = () => {
                 soundService.play('click');
                 setScreen('levels');
               }}
-              onOpenTimerChallenge={() => setShowTimerChallenge(true)}
+              onOpenTimerChallenge={() => {
+                soundService.play('click');
+                setShowTimerChallenge(true);
+              }}
               currentLevel={gameState.currentLevel}
               completedLevels={gameState.completedLevels.length}
               isPro={hasProUpgrade()}
@@ -188,21 +172,9 @@ const Index = () => {
       <Store
         isOpen={showStore}
         onClose={() => setShowStore(false)}
-        onPurchase={handlePurchase}
-        onOpenPremiumStore={handleOpenPremiumStore}
+        onGameStateChange={refreshGameState}
         onOpenTimerChallenge={handleOpenTimerChallenge}
       />
-
-      {/* Premium Store Modal */}
-      <AnimatePresence>
-        {showPremiumStore && (
-          <PremiumStore
-            isOpen={showPremiumStore}
-            onClose={() => setShowPremiumStore(false)}
-            onPurchaseComplete={handlePurchaseComplete}
-          />
-        )}
-      </AnimatePresence>
 
       {/* Timer Challenge Modal */}
       <AnimatePresence>
