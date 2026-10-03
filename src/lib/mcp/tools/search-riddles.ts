@@ -20,17 +20,24 @@ export default defineTool({
     const needle = query.toLowerCase();
     const matches = riddlesData
       .filter((r) => (difficulty ? r.difficulty === difficulty : true))
-      .filter(
-        (r) =>
-          r.english.toLowerCase().includes(needle) ||
-          r.telugu.includes(query) ||
-          r.hint.toLowerCase().includes(needle),
-      )
+      .filter((r) => {
+        const enQ = typeof r.english === 'string' ? r.english : r.english.question;
+        const teQ = typeof r.telugu === 'string' ? r.telugu : r.telugu.question;
+        const hiQ = typeof r.hindi === 'string' ? r.hindi : (r.hindi?.question || '');
+        const hintText = typeof r.hint === 'string' ? r.hint : `${r.hint.en} ${r.hint.te} ${r.hint.hi || ''}`;
+        return (
+          enQ.toLowerCase().includes(needle) ||
+          teQ.includes(query) ||
+          hiQ.includes(query) ||
+          hintText.toLowerCase().includes(needle)
+        );
+      })
       .slice(0, limit)
       .map((r) => ({
         level: r.id,
-        telugu: r.telugu,
-        english: r.english,
+        telugu: typeof r.telugu === 'string' ? r.telugu : r.telugu.question,
+        english: typeof r.english === 'string' ? r.english : r.english.question,
+        hindi: typeof r.hindi === 'string' ? r.hindi : r.hindi?.question,
         hint: r.hint,
         difficulty: r.difficulty,
         premium: isPremiumLevel(r.id),

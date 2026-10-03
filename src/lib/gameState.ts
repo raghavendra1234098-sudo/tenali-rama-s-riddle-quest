@@ -10,6 +10,7 @@ export interface GameState {
   unlockedLevels: number[];
   completedLevels: number[];
   freeHints: number;
+  language?: 'te' | 'en' | 'hi';
 }
 
 const STORAGE_KEY = 'tenali_rama_game_state';
@@ -27,6 +28,7 @@ export const getDefaultState = (): GameState => ({
   unlockedLevels: [1],
   completedLevels: [],
   freeHints: 0,
+  language: 'te',
 });
 
 
@@ -79,7 +81,7 @@ export const completeLevel = (level: number, coinsEarned: number): GameState => 
     state.unlockedLevels.push(nextLevel);
   }
   
-  state.currentLevel = nextLevel <= 400 ? nextLevel : level;
+  state.currentLevel = nextLevel <= TOTAL_LEVELS ? nextLevel : level;
   saveGameState(state);
   return state;
 };
@@ -153,3 +155,15 @@ export const useHint = (): boolean => {
   }
   return false;
 };
+
+export const getGameLanguage = (): 'te' | 'en' | 'hi' => {
+  const state = loadGameState();
+  return state.language || 'te';
+};
+
+export const setGameLanguage = (language: 'te' | 'en' | 'hi'): void => {
+  const state = loadGameState();
+  state.language = language;
+  saveGameState(state);
+};
+

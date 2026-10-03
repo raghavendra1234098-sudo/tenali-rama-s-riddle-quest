@@ -3,12 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { RiddleCard } from './RiddleCard';
 import { VictoryModal } from './VictoryModal';
 import { AdRewardModal } from './AdRewardModal';
+import { RevealAnswerModal } from './RevealAnswerModal';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Zap, AlertCircle, Play, SkipForward, CheckCircle } from 'lucide-react';
 import { soundService } from '@/lib/soundService';
-import { useHint, useEnergy, completeLevel, addEnergy, addCoins, addFreeHints, loadGameState } from '@/lib/gameState';
+import { useHint, useEnergy, completeLevel, addEnergy, addCoins, addFreeHints, loadGameState, getGameLanguage, setGameLanguage } from '@/lib/gameState';
 import { adService, type AdType } from '@/lib/adService';
 import { getRiddle } from '@/lib/riddlesDatabase';
+import { validateAnswer } from '@/lib/answerValidation';
 
 interface GameScreenProps {
   level: number;
@@ -29,6 +31,17 @@ export const GameScreen = ({ level, energy, onBack, onGameStateChange }: GameScr
   const [adModalOpen, setAdModalOpen] = useState(false);
   const [currentAdType, setCurrentAdType] = useState<AdType>('hint');
 
+  // Reveal answer modal state
+  const [revealModalOpen, setRevealModalOpen] = useState(false);
+
+  // Language state initialized from game state
+  const [language, setLanguage] = useState<'te' | 'en' | 'hi'>(getGameLanguage());
+
+  const handleLanguageChange = useCallback((newLang: 'te' | 'en' | 'hi') => {
+    setLanguage(newLang);
+    setGameLanguage(newLang);
+  }, []);
+
   // Get current game state for coin check
   const gameState = loadGameState();
   const hasCoinsForHint = gameState.totalCoins >= 50;
@@ -36,9 +49,14 @@ export const GameScreen = ({ level, energy, onBack, onGameStateChange }: GameScr
   // Get the unique riddle for this level from database
   const levelRiddle = getRiddle(level);
   const currentRiddle = {
+    id: levelRiddle.id,
     telugu: levelRiddle.telugu,
     english: levelRiddle.english,
+    hindi: levelRiddle.hindi,
     answer: levelRiddle.answer,
+    acceptedAnswers: levelRiddle.acceptedAnswers,
+    canonicalAnswer: levelRiddle.canonicalAnswer,
+    explanation: levelRiddle.explanation,
     hint: levelRiddle.hint,
   };
 
@@ -110,10 +128,7 @@ export const GameScreen = ({ level, energy, onBack, onGameStateChange }: GameScr
   }, [currentAdType, level, onGameStateChange]);
 
   const handleSubmitAnswer = useCallback((answer: string) => {
-    const normalizedAnswer = answer.toLowerCase().trim();
-    const isCorrect = currentRiddle.answer.some(
-      (correct) => normalizedAnswer.includes(correct.toLowerCase())
-    );
+    const { isCorrect } = validateAnswer(answer, levelRiddle, level);
 
     if (isCorrect) {
       soundService.play('correct');
@@ -126,13 +141,24 @@ export const GameScreen = ({ level, energy, onBack, onGameStateChange }: GameScr
       soundService.play('wrong');
       showErrorMessage("Incorrect! Try again or use a hint.");
     }
-  }, [currentRiddle, level, onGameStateChange]);
+  }, [levelRiddle, level, onGameStateChange]);
 
   const handleContinue = () => {
     setShowVictory(false);
     setShowHint(false);
     onGameStateChange();
   };
+
+  const handleRevealAnswerConfirm = useCallback(() => {
+    // Complete level with 0 coins reward (economic protection)
+    completeLevel(level, 0);
+  }, [level]);
+
+  const handleContinueFromReveal = useCallback(() => {
+    setRevealModalOpen(false);
+    setShowHint(false);
+    onGameStateChange();
+  }, [onGameStateChange]);
 
   if (energy <= 0) {
     return (
@@ -237,10 +263,13 @@ export const GameScreen = ({ level, energy, onBack, onGameStateChange }: GameScr
         onSubmitAnswer={handleSubmitAnswer}
         onRequestHint={handleRequestHint}
         onWatchAdForHint={handleWatchAdForHint}
+        onRevealAnswer={() => setRevealModalOpen(true)}
         showHint={showHint}
         isLoading={isLoading}
         level={level}
         hasCoinsForHint={hasCoinsForHint}
+        language={language}
+        onLanguageChange={handleLanguageChange}
       />
 
       {/* Victory Modal */}
@@ -249,6 +278,17 @@ export const GameScreen = ({ level, energy, onBack, onGameStateChange }: GameScr
         level={level}
         coinsEarned={coinsEarned}
         onContinue={handleContinue}
+      />
+
+      {/* Reveal Answer Modal */}
+      <RevealAnswerModal
+        isOpen={revealModalOpen}
+        level={level}
+        riddle={levelRiddle}
+        language={language}
+        onClose={() => setRevealModalOpen(false)}
+        onRevealed={handleRevealAnswerConfirm}
+        onContinue={handleContinueFromReveal}
       />
 
       {/* Ad Reward Modal */}

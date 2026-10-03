@@ -49,7 +49,8 @@ class AdService {
         const { AdMob } = this.admobModule;
         
         await AdMob.initialize({
-          initializeForTesting: false, // Set to false for production
+          // Test ads enabled in development to protect AdMob account; live ads used in production
+          initializeForTesting: import.meta.env.DEV,
         });
         
         console.log('AdMob initialized successfully');

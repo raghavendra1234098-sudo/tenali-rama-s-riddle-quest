@@ -1,24 +1,30 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Lightbulb, Send, ArrowRight, Loader2, Sparkles, Crown, Stars, Scroll } from 'lucide-react';
+import { Lightbulb, Send, ArrowRight, Loader2, Sparkles, Crown, Stars, Scroll, Eye } from 'lucide-react';
 import { OrnateFrame, RoyalDivider, FloatingOrbs } from './OrnateFrame';
 import { soundService } from '@/lib/soundService';
 
 interface RiddleCardProps {
   riddle: {
-    telugu: string;
-    english: string;
-    hint?: string;
+    telugu: string | { question: string; answer?: string; acceptedAnswers?: string[] };
+    english: string | { question: string; answer?: string; acceptedAnswers?: string[] };
+    hindi?: string | { question: string; answer?: string; acceptedAnswers?: string[] };
+    hint?: string | { te: string; en: string; hi: string };
+    canonicalAnswer?: { en: string; te: string; hi: string };
+    explanation?: { en: string; te: string; hi: string };
   };
   riddleImage?: string;
   onSubmitAnswer: (answer: string) => void;
   onRequestHint: () => void;
   onWatchAdForHint: () => void;
+  onRevealAnswer?: () => void;
   showHint: boolean;
   isLoading: boolean;
   level: number;
   hasCoinsForHint: boolean;
+  language?: 'te' | 'en' | 'hi';
+  onLanguageChange?: (lang: 'te' | 'en' | 'hi') => void;
 }
 
 // Floating sparkle particles component
@@ -39,7 +45,7 @@ const SparkleParticles = () => (
           opacity: [0, 1, 1, 0],
           scale: [0, 1.5, 1, 0]
         }}
-        transition={{
+        transition={{ 
           duration: 4 + Math.random() * 2,
           repeat: Infinity,
           delay: Math.random() * 3,
@@ -93,14 +99,24 @@ export const RiddleCard = ({
   onSubmitAnswer,
   onRequestHint,
   onWatchAdForHint,
+  onRevealAnswer,
   showHint,
   isLoading,
   level,
   hasCoinsForHint,
+  language = 'te',
+  onLanguageChange,
 }: RiddleCardProps) => {
   const [answer, setAnswer] = useState('');
-  const [showTelugu, setShowTelugu] = useState(true);
+  const [selectedLanguage, setSelectedLanguage] = useState<'te' | 'en' | 'hi'>(language);
   const [isTyping, setIsTyping] = useState(false);
+
+  // Synchronize with external language changes
+  useEffect(() => {
+    if (language) {
+      setSelectedLanguage(language);
+    }
+  }, [language]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,9 +127,12 @@ export const RiddleCard = ({
     }
   };
 
-  const handleLanguageToggle = (telugu: boolean) => {
+  const handleLanguageToggle = (lang: 'te' | 'en' | 'hi') => {
     soundService.play('pop');
-    setShowTelugu(telugu);
+    setSelectedLanguage(lang);
+    if (onLanguageChange) {
+      onLanguageChange(lang);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -132,6 +151,74 @@ export const RiddleCard = ({
   const handleAdHintClick = () => {
     soundService.play('click');
     onWatchAdForHint();
+  };
+
+  // Localized text getters
+  const getQuestionText = (): string => {
+    if (selectedLanguage === 'hi') {
+      if (typeof riddle.hindi === 'string') return riddle.hindi;
+      if (riddle.hindi?.question) return riddle.hindi.question;
+      return typeof riddle.english === 'string' ? riddle.english : (riddle.english?.question || '');
+    }
+    if (selectedLanguage === 'en') {
+      if (typeof riddle.english === 'string') return riddle.english;
+      if (riddle.english?.question) return riddle.english.question;
+      return '';
+    }
+    // Default to Telugu
+    if (typeof riddle.telugu === 'string') return riddle.telugu;
+    if (riddle.telugu?.question) return riddle.telugu.question;
+    return typeof riddle.english === 'string' ? riddle.english : (riddle.english?.question || '');
+  };
+
+  const getQuestionFont = (): string => {
+    if (selectedLanguage === 'te') return 'font-telugu';
+    if (selectedLanguage === 'hi') return 'font-sans font-medium';
+    return 'font-royal';
+  };
+
+  const getHintText = (): string => {
+    if (!riddle.hint) return '';
+    if (typeof riddle.hint === 'string') return riddle.hint;
+    if (selectedLanguage === 'hi') return riddle.hint.hi || riddle.hint.en;
+    if (selectedLanguage === 'en') return riddle.hint.en;
+    return riddle.hint.te || riddle.hint.en;
+  };
+
+  const getHintTitle = (): string => {
+    if (selectedLanguage === 'hi') return 'शाही संकेत';
+    if (selectedLanguage === 'en') return 'Royal Hint';
+    return 'రాజ సూచన';
+  };
+
+  const getPlaceholder = (): string => {
+    if (selectedLanguage === 'hi') return '🤔 आपका उत्तर... / Your answer...';
+    if (selectedLanguage === 'en') return '🤔 Your answer...';
+    return '🤔 మీ సమాధానం... / Your answer...';
+  };
+
+  const getHintButtonLabel = (): string => {
+    if (selectedLanguage === 'hi') return 'संकेत (50 💰)';
+    if (selectedLanguage === 'en') return 'Hint (50 💰)';
+    return 'సూచన (50 💰)';
+  };
+
+  const getFreeHintButtonLabel = (): string => {
+    if (selectedLanguage === 'hi') return 'मुफ्त संकेत 🎬';
+    if (selectedLanguage === 'en') return 'Free Hint 🎬';
+    return 'ఉచిత సూచన 🎬';
+  };
+
+  const getRevealButtonLabel = (): string => {
+    if (selectedLanguage === 'hi') return 'उत्तर देखें';
+    if (selectedLanguage === 'en') return 'Reveal Answer';
+    return 'జవాబు చూపించు';
+  };
+
+  const getSubmitButtonLabel = (): string => {
+    if (selectedLanguage === 'hi') return 'उत्तर भेजें';
+    if (selectedLanguage === 'en') return 'Submit Answer';
+    return 'సమాధానం పంపండి';
   };
 
   return (
@@ -234,43 +321,64 @@ export const RiddleCard = ({
 
         <RoyalDivider className="mb-6" />
 
-        {/* Language Toggle - Enhanced */}
+        {/* Language Toggle - Telugu | English | Hindi */}
         <div className="flex justify-center mb-6 relative z-10">
           <motion.div 
             className="inline-flex rounded-full bg-gradient-to-r from-muted via-muted to-muted p-1.5 border-2 border-gold/30 shadow-lg"
             whileHover={{ boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)' }}
           >
             <motion.button
-              onClick={() => handleLanguageToggle(true)}
-              className={`relative px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${
-                showTelugu ? 'text-primary-foreground' : 'text-muted-foreground hover:text-gold'
+              type="button"
+              onClick={() => handleLanguageToggle('te')}
+              className={`relative px-4 sm:px-5 py-2 rounded-full text-sm font-bold transition-all duration-300 ${
+                selectedLanguage === 'te' ? 'text-primary-foreground' : 'text-muted-foreground hover:text-gold'
               }`}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              {showTelugu && (
+              {selectedLanguage === 'te' && (
                 <motion.div
                   layoutId="langToggle"
                   className="absolute inset-0 gradient-gold rounded-full shadow-gold"
                 />
               )}
-              <span className="relative z-10 font-telugu text-base">తెలుగు</span>
+              <span className="relative z-10 font-telugu text-sm sm:text-base">తెలుగు</span>
             </motion.button>
+
             <motion.button
-              onClick={() => handleLanguageToggle(false)}
-              className={`relative px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${
-                !showTelugu ? 'text-primary-foreground' : 'text-muted-foreground hover:text-gold'
+              type="button"
+              onClick={() => handleLanguageToggle('en')}
+              className={`relative px-4 sm:px-5 py-2 rounded-full text-sm font-bold transition-all duration-300 ${
+                selectedLanguage === 'en' ? 'text-primary-foreground' : 'text-muted-foreground hover:text-gold'
               }`}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              {!showTelugu && (
+              {selectedLanguage === 'en' && (
                 <motion.div
                   layoutId="langToggle"
                   className="absolute inset-0 gradient-gold rounded-full shadow-gold"
                 />
               )}
-              <span className="relative z-10">English</span>
+              <span className="relative z-10 tracking-wide text-xs sm:text-sm uppercase font-extrabold">English</span>
+            </motion.button>
+
+            <motion.button
+              type="button"
+              onClick={() => handleLanguageToggle('hi')}
+              className={`relative px-4 sm:px-5 py-2 rounded-full text-sm font-bold transition-all duration-300 ${
+                selectedLanguage === 'hi' ? 'text-primary-foreground' : 'text-muted-foreground hover:text-gold'
+              }`}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {selectedLanguage === 'hi' && (
+                <motion.div
+                  layoutId="langToggle"
+                  className="absolute inset-0 gradient-gold rounded-full shadow-gold"
+                />
+              )}
+              <span className="relative z-10 font-sans text-sm sm:text-base">हिन्दी</span>
             </motion.button>
           </motion.div>
         </div>
@@ -278,10 +386,10 @@ export const RiddleCard = ({
         {/* Riddle Text - Enhanced Typography */}
         <AnimatePresence mode="wait">
           <motion.div
-            key={showTelugu ? 'telugu' : 'english'}
-            initial={{ opacity: 0, x: showTelugu ? -20 : 20 }}
+            key={selectedLanguage}
+            initial={{ opacity: 0, x: selectedLanguage === 'te' ? -20 : 20 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: showTelugu ? 20 : -20 }}
+            exit={{ opacity: 0, x: selectedLanguage === 'te' ? 20 : -20 }}
             className="text-center mb-8 relative z-10"
           >
             {isLoading ? (
@@ -306,21 +414,21 @@ export const RiddleCard = ({
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-24 h-0.5 bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
                 
                 <motion.p 
-                  className={`text-xl md:text-2xl leading-relaxed ${showTelugu ? 'font-telugu' : 'font-royal'} text-foreground px-4`}
+                  className={`text-xl md:text-2xl leading-relaxed ${getQuestionFont()} text-foreground px-4`}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.2 }}
                 >
-                  {showTelugu ? riddle.telugu : riddle.english}
+                  {getQuestionText()}
                 </motion.p>
               </motion.div>
             )}
           </motion.div>
         </AnimatePresence>
 
-        {/* Hint Section - Enhanced */}
+        {/* Hint Section - Multilingual */}
         <AnimatePresence>
-          {showHint && riddle.hint && (
+          {showHint && getHintText() && (
             <motion.div
               initial={{ opacity: 0, height: 0, y: -10 }}
               animate={{ opacity: 1, height: 'auto', y: 0 }}
@@ -341,10 +449,12 @@ export const RiddleCard = ({
                   <div>
                     <span className="text-amber-glow font-bold text-sm flex items-center gap-2">
                       <Sparkles className="w-4 h-4" />
-                      Royal Hint
+                      {getHintTitle()}
                       <Sparkles className="w-4 h-4" />
                     </span>
-                    <p className="text-foreground mt-2 text-lg">{riddle.hint}</p>
+                    <p className={`text-foreground mt-2 text-lg ${selectedLanguage === 'te' ? 'font-telugu' : ''}`}>
+                      {getHintText()}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -371,8 +481,10 @@ export const RiddleCard = ({
                 type="text"
                 value={answer}
                 onChange={handleInputChange}
-                placeholder="🤔 మీ సమాధానం... / Your answer..."
-                className="relative w-full px-6 py-5 rounded-2xl bg-gradient-to-b from-input to-input/80 border-2 border-gold/40 text-foreground placeholder:text-muted-foreground focus:border-gold focus:outline-none focus:ring-4 focus:ring-gold/30 transition-all font-telugu text-lg shadow-lg"
+                placeholder={getPlaceholder()}
+                className={`relative w-full px-6 py-5 rounded-2xl bg-gradient-to-b from-input to-input/80 border-2 border-gold/40 text-foreground placeholder:text-muted-foreground focus:border-gold focus:outline-none focus:ring-4 focus:ring-gold/30 transition-all ${
+                  selectedLanguage === 'te' ? 'font-telugu' : ''
+                } text-lg shadow-lg`}
                 disabled={isLoading}
               />
               
@@ -390,7 +502,7 @@ export const RiddleCard = ({
           </div>
 
           <div className="flex flex-wrap gap-4 justify-center">
-            {!showHint && (
+            {!showHint ? (
               <>
                 {hasCoinsForHint ? (
                   <Button
@@ -401,7 +513,7 @@ export const RiddleCard = ({
                     className="min-w-[150px] group"
                   >
                     <Lightbulb className="w-4 h-4 mr-2 group-hover:animate-pulse" />
-                    Hint (50 💰)
+                    {getHintButtonLabel()}
                   </Button>
                 ) : (
                   <Button
@@ -412,10 +524,23 @@ export const RiddleCard = ({
                     className="min-w-[150px] group"
                   >
                     <Lightbulb className="w-4 h-4 mr-2 group-hover:animate-pulse" />
-                    Free Hint 🎬
+                    {getFreeHintButtonLabel()}
                   </Button>
                 )}
               </>
+            ) : (
+              onRevealAnswer && (
+                <Button
+                  type="button"
+                  variant="royalOutline"
+                  onClick={onRevealAnswer}
+                  disabled={isLoading}
+                  className="min-w-[150px] group border-gold/60 text-gold hover:bg-gold/10"
+                >
+                  <Eye className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
+                  {getRevealButtonLabel()}
+                </Button>
+              )
             )}
             <motion.div
               whileHover={{ scale: 1.02 }}
@@ -435,7 +560,7 @@ export const RiddleCard = ({
                   transition={{ duration: 0.5 }}
                 />
                 <Send className="w-4 h-4 mr-2" />
-                Submit Answer
+                {getSubmitButtonLabel()}
                 <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
             </motion.div>

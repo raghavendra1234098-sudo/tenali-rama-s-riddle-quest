@@ -5,6 +5,7 @@ import { Timer, Zap, Trophy, AlertCircle, Clock, Star } from 'lucide-react';
 import { soundService } from '@/lib/soundService';
 import { hasProUpgrade } from '@/lib/purchaseService';
 import { getRiddle } from '@/lib/riddlesDatabase';
+import { validateAnswer } from '@/lib/answerValidation';
 import { addCoins, loadGameState } from '@/lib/gameState';
 
 interface TimerChallengeProps {
@@ -75,10 +76,7 @@ export const TimerChallenge = ({ isOpen, onClose, onGameStateChange }: TimerChal
   };
 
   const handleSubmit = () => {
-    const normalizedAnswer = answer.toLowerCase().trim();
-    const correct = currentRiddle.answer.some(
-      ans => normalizedAnswer.includes(ans.toLowerCase())
-    );
+    const { isCorrect: correct } = validateAnswer(answer, currentRiddle, currentRiddle.id);
 
     setIsCorrect(correct);
     setShowResult(true);
@@ -306,10 +304,10 @@ export const TimerChallenge = ({ isOpen, onClose, onGameStateChange }: TimerChal
           {/* Question */}
           <div className="flex-1 flex flex-col justify-center">
             <p className="text-lg text-center text-foreground leading-relaxed mb-4">
-              {currentRiddle.telugu}
+              {typeof currentRiddle.telugu === 'string' ? currentRiddle.telugu : currentRiddle.telugu.question}
             </p>
             <p className="text-sm text-center text-muted-foreground italic">
-              {currentRiddle.english}
+              {typeof currentRiddle.english === 'string' ? currentRiddle.english : currentRiddle.english.question}
             </p>
           </div>
 

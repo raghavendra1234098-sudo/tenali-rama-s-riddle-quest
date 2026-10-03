@@ -1,6 +1,7 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 import { getRiddle, getTotalRiddleCount } from "../../riddlesDatabase";
+import { validateAnswer } from "../../answerValidation";
 
 export default defineTool({
   name: "check_answer",
@@ -21,8 +22,7 @@ export default defineTool({
       };
     }
     const riddle = getRiddle(level);
-    const normalized = guess.toLowerCase().trim();
-    const correct = riddle.answer.some((a) => normalized.includes(a.toLowerCase()));
+    const { isCorrect: correct } = validateAnswer(guess, riddle, level);
     const payload = { level, guess, correct, hint: riddle.hint };
     return {
       content: [

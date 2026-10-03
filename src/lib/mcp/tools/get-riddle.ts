@@ -22,8 +22,9 @@ export default defineTool({
     const riddle = getRiddle(level);
     const payload = {
       level,
-      telugu: riddle.telugu,
-      english: riddle.english,
+      telugu: typeof riddle.telugu === 'string' ? riddle.telugu : riddle.telugu.question,
+      english: typeof riddle.english === 'string' ? riddle.english : riddle.english.question,
+      hindi: typeof riddle.hindi === 'string' ? riddle.hindi : riddle.hindi?.question,
       hint: riddle.hint,
       difficulty: riddle.difficulty,
       premium: isPremiumLevel(riddle.id),
